@@ -1,0 +1,71 @@
+!alias tower vote <drac2>
+# Parse arguments
+args = &ARGS&
+if len(args) != 1 or not args[0].isdigit() or int(args[0]) not in [1, 2, 3, 4]:
+    return f'embed -title "Error: Invalid Syntax" -desc "Invalid command. Use `!tower vote 1/2/3/4`."'
+
+vote = int(args[0])
+
+# Get the user who ran the command
+user = ctx.author
+user_id = str(user.id)
+
+# Check if there is an active combat
+current_combat = combat()
+if not current_combat:
+    return f'embed -title "Error: Not in Combat" -desc "No active combat found. Please start the dungeon first with `!tower begin`"'
+
+# Retrieve the initiative metadata
+dungeon_metadata = current_combat.get_metadata("dungeon_state")
+if not dungeon_metadata:
+    return f'embed -title "Error: No Dungeon State" -desc "No dungeon state found. Please start the dungeon first with `!tower begin`."'
+
+dungeon_state = load_json(dungeon_metadata)
+
+# Check if the dungeon stage is in VOTE phase
+if dungeon_state.get("dungeon_stage") != "VOTE":
+    return f'embed -title "Error: Not in Correct Phase" -desc "The dungeon is not in the voting stage. Please wait for the appropriate phase."'
+
+# Check if the user is a participant
+if user_id not in dungeon_state["votes"]:
+    return f'embed -title "Error: Not in Correct Phase" -desc "You are not a participant in this dungeon. Please check your active character."'
+
+# Update the user's vote
+dungeon_state["votes"][user_id] = vote
+
+# Create vote display
+votes = {i: [] for i in range(1, 5)}
+for uid, v in dungeon_state["votes"].items():
+    if v:
+        char_name = None
+        for p in dungeon_state["participants"]:
+            if p["user_id"] == uid:
+                char_name = p["character"]
+                break
+        votes[v].append(char_name)
+
+vote_display = "\n".join([f"Door {i}: {', '.join(v) if v else 'No votes'}" for i, v in votes.items()])
+waiting_for_votes = [p["character"] for p in dungeon_state["participants"] if dungeon_state["votes"][p["user_id"]] is None]
+
+# Check for unanimous votes
+vote_counts = [v for v in dungeon_state["votes"].values() if v is not None]
+unanimous_vote = vote_counts[0] if len(set(vote_counts)) == 1 else None
+
+# Create the embed message
+embed_title = "Dungeon Door Vote"
+embed_desc = f"Votes so far:\n{vote_display}\n\nWaiting for votes from:\n{', '.join(waiting_for_votes) if waiting_for_votes else 'None'}\n\nVotes must be unanimous for all players to proceed to the next room."
+
+if unanimous_vote:
+    embed_desc += f"\n\nUnanimous vote for Door {unanimous_vote}. Proceeding to the next room."
+
+embed_color = 0x00ff00
+
+# Construct the embed command
+embed_cmd = f'embed -title "{embed_title}" -desc "{embed_desc}" -color {embed_color}'
+
+# Update metadata if not unanimous
+if not unanimous_vote:
+    current_combat.set_metadata("dungeon_state", dump_json(dungeon_state))
+
+return embed_cmd if not unanimous_vote else f"{embed_cmd}\nProceed to the next room."
+</drac2>

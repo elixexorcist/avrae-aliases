@@ -1,0 +1,88 @@
+!alias enter <drac2>
+# Parameters
+args = &ARGS&
+if not args or args[0].lower() not in ['easy', 'medium', 'hard', 'deadly']:
+    return f'embed -title "Error" -desc "Please specify a difficulty: easy, medium, hard, or deadly." -color red'
+
+difficulty = args[0].lower()
+
+# Load dungeon settings
+dungeon_settings = get_svar("dungeon_settings")
+if not dungeon_settings:
+    return f'embed -title "Error" -desc "Dungeon settings not found." -color red'
+
+# Parse the settings JSON
+settings = load_json(dungeon_settings)
+
+# Get the GVAR ID for sigils
+sigils_gvar_id = settings.get("sigils_gvar")
+if not sigils_gvar_id:
+    return f'embed -title "Error" -desc "Sigils GVAR ID not found in settings." -color red'
+
+# Load the sigils from GVAR
+sigils_gvar = get_gvar(sigils_gvar_id)
+if not sigils_gvar:
+    return f'embed -title "Error" -desc "Failed to load sigils from GVAR." -color red'
+
+# Parse the sigils JSON
+sigils = load_json(sigils_gvar)
+base_sigils = sigils.get("BaseSigils", {})
+
+# Get the current combat instance
+current_combat = combat()
+if not current_combat:
+    return "No active combat found. Please start the dungeon first with `!tower begin`."
+
+# Retrieve the initiative metadata
+dungeon_metadata = current_combat.get_metadata("dungeon_state")
+if not dungeon_metadata:
+    return "No dungeon state found. Please start the dungeon first with `!tower begin`."
+
+dungeon_state = load_json(dungeon_metadata)
+
+# Calculate the number of sigils to pick (1 + number of participants in the dungeon)
+participants_count = len(dungeon_state.get("participants", []))
+sigils_to_pick = participants_count + 1
+
+# Randomly pick the sigils
+picked_sigils = []
+available_sigil_names = list(base_sigils.keys())
+for _ in range(sigils_to_pick):
+    sigil_index = (vroll(f"1d{len(available_sigil_names)}").total - 1)
+    picked_sigil_name = available_sigil_names.pop(sigil_index)
+    picked_sigil = base_sigils[picked_sigil_name]
+    picked_sigils.append((picked_sigil_name, picked_sigil))
+
+# Get the floor settings based on difficulty
+floors = {
+    'easy': settings.get("floors_e", 5),
+    'medium': settings.get("floors_m", 10),
+    'hard': settings.get("floors_h", 10),
+    'deadly': settings.get("floors_d", 15)
+}.get(difficulty)
+
+# Update combat metadata
+dungeon_state.update({
+    "controller": ctx.author.id,
+    "dungeon_stage": "SETUP",
+    "current_floor": 0,
+    "final_floor": floors,
+    "total_xp": 0,
+    "difficulty": difficulty,
+    "picked_sigils": [sigil[0] for sigil in picked_sigils]
+})
+current_combat.set_metadata("dungeon_state", dump_json(dungeon_state))
+
+# Create embed message
+embed_title = "Sigil Selection"
+embed_desc = f"**Difficulty:** {difficulty.capitalize()}\n**Max Floors:** {floors}\n\n**Select a sigil from the options below:**\n"
+for name, sigil in picked_sigils:
+    embed_desc += f"\n**{name}**\n{sigil['Description']}"
+
+embed_color = 0x00ff00
+
+# Construct the embed command
+embed_cmd = f'embed -title "{embed_title}" -desc "{embed_desc}" -color {embed_color}'
+
+return embed_cmd
+</drac2>

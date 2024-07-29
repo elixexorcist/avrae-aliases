@@ -1,0 +1,36 @@
+!alias tower begin
+multiline
+!init begin
+!init add 0 "Tower Administrator" -p 9999
+!init join
+<drac2>
+# Get the user who ran the command
+user = ctx.author
+
+# Get the user's active character
+cc = character()
+
+# Initialize the dungeon state
+dungeon_state = {
+    "controller": str(user.id),
+    "participants": [{"user_id": str(user.id), "character": cc.name}] if cc else [],
+    "dungeon_stage": "SETUP",
+    "current_floor": 0,
+    "final_floor": 0,
+    "total_xp": 0,
+    "difficulty": "none"
+}
+
+# Convert the dungeon state to a JSON string for initiative metadata
+dungeon_metadata = dump_json(dungeon_state)
+
+# Get the current combat instance
+current_combat = combat()
+if not current_combat:
+    return "No active combat found. Please start the dungeon first with `!tower begin`."
+
+# Update the initiative metadata with the new dungeon state
+current_combat.set_metadata("dungeon_state", dungeon_metadata)
+
+return "Initiative started and metadata set."
+</drac2>

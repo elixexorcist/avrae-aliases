@@ -1,0 +1,26 @@
+!alias tower debug <drac2>
+# Get the current combat instance
+current_combat = combat()
+if not current_combat:
+    return "No active combat found. Please start the dungeon first with `!tower begin`."
+
+# Retrieve the initiative metadata
+dungeon_metadata = current_combat.get_metadata("dungeon_state")
+if not dungeon_metadata:
+    return "No dungeon state found. Please start the dungeon first with `!tower begin`."
+
+# Load the metadata from JSON
+dungeon_state = load_json(dungeon_metadata)
+
+# Format the metadata for display
+formatted_metadata = dump_json(dungeon_state)
+
+# Ensure the description is within the Discord limit
+if len(formatted_metadata) > 2000:
+    formatted_metadata = formatted_metadata[:1997] + "..."
+
+# Create the output message
+output_message = f"**Dungeon Metadata Debug**\n```json\n{formatted_metadata}```"
+
+return output_message
+</drac2>

@@ -1,0 +1,59 @@
+!alias claim <drac2>
+# Parameters
+args = &ARGS&
+if not args:
+    return f'embed -title "Error" -desc "Please specify the sigil you want to claim." -color red'
+
+sigil_name = " ".join(args)
+
+# Load dungeon settings
+dungeon_settings = get_svar("dungeon_settings")
+if not dungeon_settings:
+    return f'embed -title "Error" -desc "Dungeon settings not found." -color red'
+
+# Parse the settings JSON
+settings = load_json(dungeon_settings)
+
+# Get the GVAR ID for sigils
+sigils_gvar_id = settings.get("sigils_gvar")
+if not sigils_gvar_id:
+    return f'embed -title "Error" -desc "Sigils GVAR ID not found in settings." -color red'
+
+# Load the sigils from GVAR
+sigils_gvar = get_gvar(sigils_gvar_id)
+if not sigils_gvar:
+    return f'embed -title "Error" -desc "Failed to load sigils from GVAR." -color red'
+
+# Parse the sigils JSON
+sigils = load_json(sigils_gvar).get("BaseSigils", {})
+if not sigils:
+    return f'embed -title "Error" -desc "No sigils found in the GVAR." -color red'
+
+# Find the sigil
+sigil = sigils.get(sigil_name)
+if not sigil:
+    return f'embed -title "Error" -desc "Sigil \'{sigil_name}\' not found. Please check the available sigils." -color red'
+
+# Get the target character
+cc = combat().me
+if not cc:
+    return f'embed -title "Error" -desc "No active combatant found." -color red'
+
+# Apply the effect
+effect_name = sigil["Name"]
+effect_desc = sigil["Description"]
+passive_effects = sigil.get("PassiveEffects", {})
+
+# Add the effect to the combatant
+cc.add_effect(effect_name, desc=effect_desc, passive_effects=passive_effects)
+
+# Create success embed
+embed_title = "Sigil Claimed"
+embed_desc = f"{cc.name} has claimed the sigil: {sigil['Name']} - {sigil['Description']}"
+embed_color = 0x00ff00
+
+# Construct the embed command
+embed_cmd = f'embed -title "{embed_title}" -desc "{embed_desc}" -color {embed_color}'
+
+return embed_cmd
+</drac2>

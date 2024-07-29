@@ -1,0 +1,279 @@
+{
+    "BaseSigils": {
+        "🔥 Inferno's Wrath": {
+            "Name": "🔥 Inferno's Wrath",
+            "Description": "Gains advantage on attack rolls but suffers 1d4 fire damage at the start of each turn.",
+            "PassiveEffects": {
+                "attack_advantage": 1
+            }
+        },
+        "❄️ Glacial Shield": {
+            "Name": "❄️ Glacial Shield",
+            "Description": "Increases AC by 3 but movement speed is reduced by 10 feet.",
+            "PassiveEffects": {
+                "ac_bonus": 3
+            }
+        },
+        "🌑 Shadow's Embrace": {
+            "Name": "🌑 Shadow's Embrace",
+            "Description": "Gains advantage on Stealth checks but suffers disadvantage on Perception checks.",
+            "PassiveEffects": {
+                "check_adv": ["stealth"],
+                "check_dis": ["perception"]
+            }
+        },
+        "💧 Aqua Veil": {
+            "Name": "💧 Aqua Veil",
+            "Description": "Regains 1d4 HP at the start of each turn but has disadvantage on attack rolls.",
+            "PassiveEffects": {
+                "max_hp_bonus": 1
+            }
+        },
+        "⚡ Storm's Fury": {
+            "Name": "⚡ Storm's Fury",
+            "Description": "Gains advantage on initiative rolls but suffers disadvantage on Constitution saving throws.",
+            "PassiveEffects": {
+                "check_adv": ["initiative"],
+                "save_dis": ["constitution"]
+            }
+        },
+        "🍂 Forest's Whisper": {
+            "Name": "🍂 Forest's Whisper",
+            "Description": "Gains advantage on all Wisdom checks but suffers disadvantage on Charisma checks.",
+            "PassiveEffects": {
+                "check_adv": ["wisdom"],
+                "check_dis": ["charisma"]
+            }
+        },
+        "🔮 Arcane Focus": {
+            "Name": "🔮 Arcane Focus",
+            "Description": "Increases spell attack bonus by 2 but reduces spell save DC by 1.",
+            "PassiveEffects": {
+                "to_hit_bonus": "+2[spell]",
+                "dc_bonus": -1
+            }
+        },
+        "🌟 Starry Guidance": {
+            "Name": "🌟 Starry Guidance",
+            "Description": "Gains advantage on all Charisma checks but suffers disadvantage on Strength saving throws.",
+            "PassiveEffects": {
+                "check_adv": ["charisma"],
+                "save_dis": ["strength"]
+            }
+        },
+        "🗡️ Assassin's Precision": {
+            "Name": "🗡️ Assassin's Precision",
+            "Description": "Gain 1d4 piercing damage on a hit but reduces AC by 1.",
+            "PassiveEffects": {
+                "damage_bonus": "1d4[piercing]",
+                "ac_bonus": -1
+            }
+        },
+        "🌀 Wind's Grace": {
+            "Name": "🌀 Wind's Grace",
+            "Description": "Gains advantage on Dexterity saving throws but suffers disadvantage on Strength checks.",
+            "PassiveEffects": {
+                "save_adv": ["dexterity"],
+                "check_dis": ["strength"]
+            }
+        },
+        "⚔️ Knight's Valor": {
+            "Name": "⚔️ Knight's Valor",
+            "Description": "Increases damage dealt by 1d6 but suffers disadvantage on Dexterity checks.",
+            "PassiveEffects": {
+                "damage_bonus": "1d6",
+                "check_dis": ["dexterity"]
+            }
+        },
+        "💀 Necrotic Touch": {
+            "Name": "💀 Necrotic Touch",
+            "Description": "Deals an additional 1d6 necrotic damage on melee attacks but reduces healing received by 2.",
+            "PassiveEffects": {
+                "damage_bonus": "1d6[necrotic]"
+            }
+        },
+        "🌷 Life's Bloom": {
+            "Name": "🌷 Life's Bloom",
+            "Description": "Heals an additional 1d4 HP when receiving healing but suffers disadvantage on all attack rolls.",
+            "PassiveEffects": {
+                "check_dis": ["attack"]
+            }
+        },
+        "🌪️ Cyclone's Speed": {
+            "Name": "🌪️ Cyclone's Speed",
+            "Description": "Gains an extra attack but suffers disadvantage on Constitution saving throws.",
+            "PassiveEffects": {
+                "save_dis": ["constitution"]
+            }
+        },
+        "🌟 Radiant Glory": {
+            "Name": "🌟 Radiant Glory",
+            "Description": "Deals an additional 1d6 radiant damage on melee attacks but reduces maximum HP by 10.",
+            "PassiveEffects": {
+                "damage_bonus": "1d6[radiant]",
+                "max_hp_bonus": -10
+            }
+        },
+        "🦅 Eagle's Sight": {
+            "Name": "🦅 Eagle's Sight",
+            "Description": "Gains advantage on all Perception checks but suffers disadvantage on Stealth checks.",
+            "PassiveEffects": {
+                "check_adv": ["perception"],
+                "check_dis": ["stealth"]
+            }
+        }
+    },
+    "BossSigils": {
+        "🔥 Inferno's Fury": {
+            "Name": "🔥 Inferno's Fury",
+            "Description": "Gains advantage on all attack rolls and deals an additional 1d8 fire damage, but suffers 1d6 fire damage at the start of each turn and has disadvantage on Dexterity saving throws.",
+            "PassiveEffects": {
+                "attack_advantage": 1,
+                "damage_bonus": "1d8[fire]",
+                "save_dis": ["dexterity"]
+            }
+        },
+        "❄️ Glacial Fortress": {
+            "Name": "❄️ Glacial Fortress",
+            "Description": "Increases AC by 4 and gains resistance to fire damage, but movement speed is reduced by 15 feet and suffers disadvantage on Dexterity checks.",
+            "PassiveEffects": {
+                "ac_bonus": 4,
+                "resistances": ["fire"],
+                "check_dis": ["dexterity"]
+            }
+        },
+        "🌑 Shadow's Dominion": {
+            "Name": "🌑 Shadow's Dominion",
+            "Description": "Gains advantage on all Stealth checks and can become invisible for 1 minute per short rest, but suffers disadvantage on all attack rolls and Wisdom saving throws.",
+            "PassiveEffects": {
+                "check_adv": ["stealth"],
+                "check_dis": ["attack"],
+                "save_dis": ["wisdom"]
+            }
+        },
+        "💧 Tidal Resilience": {
+            "Name": "💧 Tidal Resilience",
+            "Description": "Regains 1d6 HP at the start of each turn and gains advantage on Constitution saving throws, but has disadvantage on all attack rolls and suffers 1d4 cold damage when hit by an attack.",
+            "PassiveEffects": {
+                "max_hp_bonus": 1,
+                "save_adv": ["constitution"],
+                "check_dis": ["attack"]
+            }
+        },
+        "⚡ Thunder God's Wrath": {
+            "Name": "⚡ Thunder God's Wrath",
+            "Description": "Gains advantage on initiative rolls and deals an additional 1d8 lightning damage on melee attacks, but suffers disadvantage on Strength saving throws and takes 1d4 lightning damage when hit by an attack.",
+            "PassiveEffects": {
+                "check_adv": ["initiative"],
+                "damage_bonus": "1d8[lightning]",
+                "save_dis": ["strength"]
+            }
+        },
+        "🍂 Sylvan Majesty": {
+            "Name": "🍂 Sylvan Majesty",
+            "Description": "Gains advantage on all Wisdom checks and saving throws, and heals 1d4 HP whenever an enemy is defeated, but suffers disadvantage on Charisma checks and saving throws.",
+            "PassiveEffects": {
+                "check_adv": ["wisdom"],
+                "save_adv": ["wisdom"],
+                "check_dis": ["charisma"],
+                "save_dis": ["charisma"]
+            }
+        },
+        "🔮 Arcane Mastery": {
+            "Name": "🔮 Arcane Mastery",
+            "Description": "Increases spell attack bonus by 3 and spell save DC by 2, but instantly expend 2 of your highest spell slots and suffer disadvantage on Constitution saving throws.",
+            "PassiveEffects": {
+                "to_hit_bonus": "+3[spell]",
+                "dc_bonus": 2,
+                "save_dis": ["constitution"]
+            }
+        },
+        "🌟 Astral Ascendancy": {
+            "Name": "🌟 Astral Ascendancy",
+            "Description": "Gains advantage on all Charisma checks and saving throws, and can once per long rest use an ability without expending a spell slot or charge, but suffers disadvantage on all Strength checks and saving throws.",
+            "PassiveEffects": {
+                "check_adv": ["charisma"],
+                "save_adv": ["charisma"],
+                "check_dis": ["strength"],
+                "save_dis": ["strength"]
+            }
+        },
+        "🗡️ Assassin's Shadow": {
+            "Name": "🗡️ Assassin's Shadow",
+            "Description": "Attacks deal an additional 2d6 damage, but reduces AC by 2 and maximum HP by 15.",
+            "PassiveEffects": {
+                "damage_bonus": "2d6",
+                "ac_bonus": -2,
+                "max_hp_bonus": -15
+            }
+        },
+        "🌀 Tempest's Agility": {
+            "Name": "🌀 Tempest's Agility",
+            "Description": "Gains an extra attack and advantage on Dexterity saving throws, but suffers disadvantage on Constitution checks and saving throws.",
+            "PassiveEffects": {
+                "save_adv": ["dexterity"],
+                "check_dis": ["constitution"],
+                "save_dis": ["constitution"]
+            }
+        },
+        "⚔️ Warlord's Might": {
+            "Name": "⚔️ Warlord's Might",
+            "Description": "Increases damage dealt by 2d6 and gains advantage on Strength checks and saving throws, but suffers disadvantage on Dexterity checks and saving throws.",
+            "PassiveEffects": {
+                "damage_bonus": "2d6",
+                "check_adv": ["strength"],
+                "save_adv": ["strength"],
+                "check_dis": ["dexterity"],
+                "save_dis": ["dexterity"]
+            }
+        },
+        "💀 Necrotic Mastery": {
+            "Name": "💀 Necrotic Mastery",
+            "Description": "Deals an additional 2d6 necrotic damage on melee attacks and gains resistance to necrotic damage, but reduces healing received by half and suffers disadvantage on all attack rolls.",
+            "PassiveEffects": {
+                "damage_bonus": "2d6[necrotic]",
+                "resistances": ["necrotic"],
+                "check_dis": ["attack"]
+            }
+        },
+        "🌷 Vital Bloom": {
+            "Name": "🌷 Vital Bloom",
+            "Description": "Heals an additional 2d4 HP when receiving healing and gains advantage on all Constitution saving throws, but suffers disadvantage on all attack rolls and Strength saving throws.",
+            "PassiveEffects": {
+                "max_hp_bonus": 2,
+                "save_adv": ["constitution"],
+                "check_dis": ["attack"],
+                "save_dis": ["strength"]
+            }
+        },
+        "🌪️ Hurricane's Rage": {
+            "Name": "🌪️ Hurricane's Rage",
+            "Description": "Gains two extra attacks and advantage on all Strength checks and saving throws, but suffers disadvantage on Constitution saving throws and takes 1d6 damage when hit by an attack.",
+            "PassiveEffects": {
+                "check_adv": ["strength"],
+                "save_adv": ["strength"],
+                "save_dis": ["constitution"]
+            }
+        },
+        "🌟 Radiant Sovereignty": {
+            "Name": "🌟 Radiant Sovereignty",
+            "Description": "Deals an additional 2d6 radiant damage on melee attacks and gains resistance to radiant damage, but reduces maximum HP by 20 and suffers disadvantage on all Dexterity checks and saving throws.",
+            "PassiveEffects": {
+                "damage_bonus": "2d6[radiant]",
+                "resistances": ["radiant"],
+                "max_hp_bonus": -20,
+                "check_dis": ["dexterity"],
+                "save_dis": ["dexterity"]
+            }
+        },
+        "🦅 Eagle's Vigilance": {
+            "Name": "🦅 Eagle's Vigilance",
+            "Description": "Gains advantage on all Perception checks and can see invisible creatures, but suffers disadvantage on Stealth checks and Dexterity saving throws.",
+            "PassiveEffects": {
+                "check_adv": ["perception"],
+                "check_dis": ["stealth"],
+                "save_dis": ["dexterity"]
+            }
+        }
+    }
+}
