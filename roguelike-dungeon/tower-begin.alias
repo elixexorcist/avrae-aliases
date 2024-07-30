@@ -1,19 +1,24 @@
-!alias tower begin
-multiline
-!init begin
-!init add 0 "Tower Administrator" -p 9999
-!init join
-<drac2>
-# Get the user who ran the command
-user = ctx.author
+!alias tower begin <drac2>
+# Check if combat is active
+combat_instance = combat()
+if not combat_instance:
+    return f'embed -title "Error" -desc "No active combat found. Please start the dungeon first with `!init begin`." -color red'
 
-# Get the user's active character
+# Check if the user's active character is in combat
 cc = character()
+if not cc:
+    return f'embed -title "Error" -desc "No active character found. Please select an active character and join the combat with `!init join`." -color red'
 
-# Initialize the dungeon state
+combatant = combat().get_combatant(cc.name)
+if not combatant:
+    return f'embed -title "Error" -desc "{cc.name} is not in the combat. Please join the combat with `!init join`." -color red'
+
+# Initialize the dungeon state with all combatants as participants
+participants = [{"user_id": str(combatant.controller), "character": combatant.name} for combatant in combat_instance.combatants]
+
 dungeon_state = {
-    "controller": str(user.id),
-    "participants": [{"user_id": str(user.id), "character": cc.name}] if cc else [],
+    "controller": str(ctx.author.id),
+    "participants": participants,
     "dungeon_stage": "SETUP",
     "current_floor": 0,
     "final_floor": 0,
@@ -21,16 +26,8 @@ dungeon_state = {
     "difficulty": "none"
 }
 
-# Convert the dungeon state to a JSON string for initiative metadata
-dungeon_metadata = dump_json(dungeon_state)
-
-# Get the current combat instance
-current_combat = combat()
-if not current_combat:
-    return "No active combat found. Please start the dungeon first with `!tower begin`."
-
 # Update the initiative metadata with the new dungeon state
-current_combat.set_metadata("dungeon_state", dungeon_metadata)
+combat_instance.set_metadata("dungeon_state", dump_json(dungeon_state))
 
-return "Initiative started and metadata set."
+return f'embed -title "Dungeon Run Initialized!" -desc "{ctx.author.display_name} has initialized the dungeon run. Metadata set with participants." -color 0x00ff00'
 </drac2>

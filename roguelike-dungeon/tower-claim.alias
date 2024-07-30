@@ -1,10 +1,10 @@
-!alias claim <drac2>
+!alias tower claim <drac2>
 # Parameters
 args = &ARGS&
 if not args:
     return f'embed -title "Error" -desc "Please specify the sigil you want to claim." -color red'
 
-sigil_name = " ".join(args)
+sigil_name = " ".join(args).lower()
 
 # Load dungeon settings
 dungeon_settings = get_svar("dungeon_settings")
@@ -25,27 +25,128 @@ if not sigils_gvar:
     return f'embed -title "Error" -desc "Failed to load sigils from GVAR." -color red'
 
 # Parse the sigils JSON
-sigils = load_json(sigils_gvar).get("BaseSigils", {})
-if not sigils:
-    return f'embed -title "Error" -desc "No sigils found in the GVAR." -color red'
+sigils = load_json(sigils_gvar)
+base_sigils = sigils.get("BaseSigils", {})
+boss_sigils = sigils.get("BossSigils", {})
 
-# Find the sigil
-sigil = sigils.get(sigil_name)
-if not sigil:
-    return f'embed -title "Error" -desc "Sigil \'{sigil_name}\' not found. Please check the available sigils." -color red'
+# Combine all sigils into one list for fuzzy matching
+all_sigils = {**base_sigils, **boss_sigils}
 
-# Get the target character
-cc = combat().me
-if not cc:
-    return f'embed -title "Error" -desc "No active combatant found." -color red'
+# Retrieve the initiative metadata
+current_combat = combat()
+if not current_combat:
+    return "No active combat found. Please start the dungeon first with `!tower begin`."
+
+dungeon_metadata = current_combat.get_metadata("dungeon_state")
+if not dungeon_metadata:
+    return "No dungeon state found. Please start the dungeon first with `!tower begin`."
+
+dungeon_state = load_json(dungeon_metadata)
+
+# Check if the current phase allows claiming sigils
+if dungeon_state.get("dungeon_stage") != "SIGIL":
+    return f'embed -title "Error" -desc "You cannot claim sigils at this stage." -color red'
+
+# Check if the character is in the participants list
+cc = character()
+if not cc or cc.name not in [participant["character"] for participant in dungeon_state.get("participants", [])]:
+    char_name = cc.name if cc else 'No character'
+    return f'embed -title "Error" -desc "{char_name} is not a participant in this dungeon." -color red'
+
+# Check if the user already claimed a sigil
+participant = None
+for p in dungeon_state["participants"]:
+    if p["character"] == cc.name:
+        participant = p
+        break
+
+if not participant:
+    return f'embed -title "Error" -desc "{cc.name} is not a participant in this dungeon." -color red'
+
+if participant.get("claimed_sigil"):
+    return f'embed -title "Error" -desc "You have already claimed a sigil." -color red'
+
+# Function for substring matching
+def substring_match(a, b):
+    return a in b or b in a
+
+# Find the best match for the sigil name
+best_match = None
+for name in all_sigils:
+    if substring_match(sigil_name, name.lower()):
+        best_match = name
+        break
+
+if not best_match:
+    return f'embed -title "Error" -desc "No matching sigil found for {sigil_name}. Please check the available sigils." -color red'
+
+# Get the matched sigil
+sigil = all_sigils[best_match]
 
 # Apply the effect
 effect_name = sigil["Name"]
 effect_desc = sigil["Description"]
 passive_effects = sigil.get("PassiveEffects", {})
 
+# Validate passive effects
+valid_keys = {
+    "attack_advantage", "to_hit_bonus", "damage_bonus", "magical_damage", "silvered_damage",
+    "resistances", "immunities", "vulnerabilities", "ignored_resistances", "ac_value",
+    "ac_bonus", "max_hp_value", "max_hp_bonus", "save_bonus", "save_adv",
+    "save_dis", "check_bonus", "check_adv", "check_dis", "dc_bonus"
+}
+
+validated_effects = {k: v for k, v in passive_effects.items() if k in valid_keys}
+
 # Add the effect to the combatant
-cc.add_effect(effect_name, desc=effect_desc, passive_effects=passive_effects)
+combat().me.add_effect(effect_name, desc=effect_desc, passive_effects=validated_effects)
+
+# Mark the sigil as claimed for the participant
+participant["claimed_sigil"] = effect_name
+
+# Check if all participants have claimed a sigil
+all_claimed = all(p.get("claimed_sigil") for p in dungeon_state["participants"])
+
+# Update the dungeon state metadata
+current_combat.set_metadata("dungeon_state", dump_json(dungeon_state))
+
+# Proceed to vote phase if all sigils are claimed
+if all_claimed:
+    # Load the rooms from GVAR
+    rooms_gvar_id = "5bb02988-6ec1-4281-8b9f-38ed8155feec"
+    rooms_gvar = get_gvar(rooms_gvar_id)
+    if not rooms_gvar:
+        return f'embed -title "Error" -desc "Failed to load rooms from GVAR." -color red'
+
+    # Parse the rooms JSON
+    rooms = load_json(rooms_gvar)
+
+    # Select room options using randint
+    room_options = rooms["CombatRooms"] + rooms["PuzzleRooms"] + rooms["MiscRooms"]
+    num_rooms = len(room_options)
+    selected_rooms = []
+    while len(selected_rooms) < 4:
+        room = room_options[randint(0, num_rooms - 1)]
+        if room not in selected_rooms:
+            selected_rooms.append(room)
+
+    # Display the vote options
+    vote_desc = "\n".join([f"Door {i+1}: {room}" for i, room in enumerate(selected_rooms)])
+
+    # Set the dungeon stage to VOTE
+    dungeon_state["dungeon_stage"] = "VOTE"
+    dungeon_state["votes"] = {participant["user_id"]: None for participant in dungeon_state["participants"]}
+    current_combat.set_metadata("dungeon_state", dump_json(dungeon_state))
+
+    # Create the embed message for voting
+    embed_title = "Dungeon Door Vote"
+    embed_desc = f"Votes so far:\n{vote_desc}\n\nWaiting for votes from:\nNone\n\nVotes must be unanimous for all players to proceed to the next room."
+    embed_color = 0x00ff00
+
+    # Construct the embed command
+    embed_cmd = f'embed -title "{embed_title}" -desc "{embed_desc}" -color {embed_color}'
+
+    return embed_cmd
 
 # Create success embed
 embed_title = "Sigil Claimed"

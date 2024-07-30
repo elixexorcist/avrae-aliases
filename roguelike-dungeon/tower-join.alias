@@ -1,4 +1,5 @@
-!alias join <drac2>
+init join
+<drac2>
 # Get the user who ran the command
 user = ctx.author
 
@@ -30,7 +31,7 @@ if "participants" not in dungeon_state:
 if any(participant["user_id"] == str(user.id) for participant in dungeon_state["participants"]):
     return f"{user.display_name} is already a participant in the dungeon."
 
-# Add the user to participants
+# Update participants
 dungeon_state["participants"].append({"user_id": str(user.id), "character": cc.name})
 current_combat.set_metadata("dungeon_state", dump_json(dungeon_state))
 
