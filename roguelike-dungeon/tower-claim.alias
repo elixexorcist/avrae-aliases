@@ -70,18 +70,19 @@ if participant.get("claimed_sigil"):
 def substring_match(a, b):
     return a in b or b in a
 
-# Find the best match for the sigil name
-best_match = None
-for name in all_sigils:
-    if substring_match(sigil_name, name.lower()):
-        best_match = name
+# Check if the claimed sigil is in the picked sigils
+picked_sigils = dungeon_state.get("picked_sigils", [])
+matching_sigil = None
+for sigil in picked_sigils:
+    if substring_match(sigil_name, sigil.lower()):
+        matching_sigil = sigil
         break
 
-if not best_match:
+if not matching_sigil:
     return f'embed -title "Error" -desc "No matching sigil found for {sigil_name}. Please check the available sigils." -color red'
 
 # Get the matched sigil
-sigil = all_sigils[best_match]
+sigil = all_sigils[matching_sigil]
 
 # Apply the effect
 effect_name = sigil["Name"]

@@ -1,5 +1,5 @@
 !alias tower vote <drac2>
-# Parse arguments
+# Parameters
 args = &ARGS&
 if len(args) != 1 or not args[0].isdigit() or int(args[0]) not in [1, 2, 3, 4]:
     return f'embed -title "Error: Invalid Syntax" -desc "Invalid command. Use `!tower vote 1/2/3/4`."'
@@ -27,45 +27,93 @@ if dungeon_state.get("dungeon_stage") != "VOTE":
     return f'embed -title "Error: Not in Correct Phase" -desc "The dungeon is not in the voting stage. Please wait for the appropriate phase."'
 
 # Check if the user is a participant
-if user_id not in dungeon_state["votes"]:
-    return f'embed -title "Error: Not in Correct Phase" -desc "You are not a participant in this dungeon. Please check your active character."'
+if user_id not in [p["user_id"] for p in dungeon_state["participants"]]:
+    return f'embed -title "Error: Not a Participant" -desc "You are not a participant in this dungeon. Please check your active character."'
 
 # Update the user's vote
 dungeon_state["votes"][user_id] = vote
 
-# Create vote display
-votes = {i: [] for i in range(1, 5)}
-for uid, v in dungeon_state["votes"].items():
-    if v:
-        char_name = None
-        for p in dungeon_state["participants"]:
-            if p["user_id"] == uid:
-                char_name = p["character"]
+# Check if all participants have voted
+all_voted = all(v is not None for v in dungeon_state["votes"].values())
+
+if all_voted:
+    # Calculate XP budget and generate encounter
+    total_levels = sum(p["level"] for p in dungeon_state["participants"])
+    difficulty_multiplier = {"easy": 1, "medium": 2, "hard": 3, "deadly": 4}.get(dungeon_state["difficulty"], 1)
+    xp_budget = total_levels * difficulty_multiplier * 100  # Adjust multiplier as needed
+
+    # Load monsters from GVAR
+    monsters_gvar_id = "your_monsters_gvar_id"  # Replace with actual GVAR ID
+    monsters_gvar = get_gvar(monsters_gvar_id)
+    monsters = load_json(monsters_gvar)
+
+    # Generate encounter based on XP budget
+    encounter = []
+    total_xp = 0
+    num_monsters = len(dungeon_state["participants"]) + 1
+
+    for cr, monster_list in sorted(monsters.items(), key=lambda x: x[1]["xp"]):
+        for monster in monster_list:
+            if total_xp + monster["xp"] <= xp_budget and len(encounter) < num_monsters:
+                encounter.append(monster)
+                total_xp += monster["xp"]
+            if len(encounter) >= num_monsters:
                 break
-        votes[v].append(char_name)
+        if len(encounter) >= num_monsters:
+            break
 
-vote_display = "\n".join([f"Door {i}: {', '.join(v) if v else 'No votes'}" for i, v in votes.items()])
-waiting_for_votes = [p["character"] for p in dungeon_state["participants"] if dungeon_state["votes"][p["user_id"]] is None]
+    # Add monsters to initiative
+    for monster in encounter:
+        current_combat.add_combatant(monster["name"], hp=monster["hp"], ac=monster["ac"], init=roll("1d20+" + str(monster["dex_mod"])), img=monster["image"])
 
-# Check for unanimous votes
-vote_counts = [v for v in dungeon_state["votes"].values() if v is not None]
-unanimous_vote = vote_counts[0] if len(set(vote_counts)) == 1 else None
+    # Proceed to next phase
+    dungeon_state["dungeon_stage"] = "ENCOUNTER"
+    current_combat.set_metadata("dungeon_state", dump_json(dungeon_state))
 
-# Create the embed message
-embed_title = "Dungeon Door Vote"
-embed_desc = f"Votes so far:\n{vote_display}\n\nWaiting for votes from:\n{', '.join(waiting_for_votes) if waiting_for_votes else 'None'}\n\nVotes must be unanimous for all players to proceed to the next room."
+    # Create encounter display
+    encounter_display = "\n".join([f"{monster['name']} (CR {monster['cr']}, XP {monster['xp']})" for monster in encounter])
+    embed_title = "Encounter Generated"
+    embed_desc = f"An encounter has been generated based on your votes:\n\n{encounter_display}\n\nPrepare for battle!"
+else:
+    # Create vote display
+    votes = {i: [] for i in range(1, 5)}
+    for uid, v in dungeon_state["votes"].items():
+        if v:
+            char_name = "Unknown"
+            for p in dungeon_state["participants"]:
+                if p["user_id"] == uid:
+                    char_name = p["character"]
+                    break
+            votes[v].append(char_name)
 
-if unanimous_vote:
-    embed_desc += f"\n\nUnanimous vote for Door {unanimous_vote}. Proceeding to the next room."
+    # Display the current rooms being voted on
+    current_rooms = dungeon_state.get("current_rooms", [])
+    room_display = "\n".join([f"Door {i+1}: {room}" for i, room in enumerate(current_rooms)])
+    vote_display = "\n".join([f"Door {i}: {', '.join(v) if v else 'No votes'}" for i, v in votes.items()])
+    waiting_for_votes = [p["character"] for p in dungeon_state["participants"] if dungeon_state["votes"].get(p["user_id"]) is None]
+
+    # Check for unanimous votes
+    vote_counts = [v for v in dungeon_state["votes"].values() if v is not None]
+    unanimous_vote = vote_counts[0] if len(set(vote_counts)) == 1 else None
+
+    # Create the embed message
+    embed_title = "Dungeon Door Vote"
+    embed_desc = f"**Rooms up for vote:**\n{room_display}\n\n**Votes so far:**\n{vote_display}\n\n**Waiting for votes from:**\n{', '.join(waiting_for_votes) if waiting_for_votes else 'None'}\n\n**Votes must be unanimous for all players to proceed to the next room.**"
+
+    if unanimous_vote:
+        embed_desc += f"\n\n**Unanimous vote for Door {unanimous_vote}. Proceeding to the next room.**"
+
+    embed_color = 0x00ff00
+
+    # Construct the embed command
+    embed_cmd = f'embed -title "{embed_title}" -desc "{embed_desc}" -color {embed_color}'
+
+    return embed_cmd if not unanimous_vote else f"{embed_cmd}\nProceed to the next room."
 
 embed_color = 0x00ff00
 
 # Construct the embed command
 embed_cmd = f'embed -title "{embed_title}" -desc "{embed_desc}" -color {embed_color}'
 
-# Update metadata if not unanimous
-if not unanimous_vote:
-    current_combat.set_metadata("dungeon_state", dump_json(dungeon_state))
-
-return embed_cmd if not unanimous_vote else f"{embed_cmd}\nProceed to the next room."
+return embed_cmd
 </drac2>

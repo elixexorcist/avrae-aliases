@@ -1,4 +1,4 @@
-!alias enter <drac2>
+!alias tower enter <drac2>
 # Parameters
 args = &ARGS&
 if not args or args[0].lower() not in ['easy', 'medium', 'hard', 'deadly']:
@@ -61,15 +61,34 @@ floors = {
     'deadly': settings.get("floors_d", 15)
 }.get(difficulty)
 
+# Randomly select room options for voting
+rooms_gvar_id = "5bb02988-6ec1-4281-8b9f-38ed8155feec"
+rooms_gvar = get_gvar(rooms_gvar_id)
+if not rooms_gvar:
+    return f'embed -title "Error" -desc "Failed to load rooms from GVAR." -color red'
+
+# Parse the rooms JSON
+rooms = load_json(rooms_gvar)
+
+# Select room options using randint
+room_options = rooms["CombatRooms"] + rooms["PuzzleRooms"] + rooms["MiscRooms"]
+num_rooms = len(room_options)
+selected_rooms = []
+while len(selected_rooms) < 4:
+    room = room_options[randint(0, num_rooms - 1)]
+    if room not in selected_rooms:
+        selected_rooms.append(room)
+
 # Update combat metadata
 dungeon_state.update({
     "controller": ctx.author.id,
-    "dungeon_stage": "SETUP",
+    "dungeon_stage": "SIGIL",
     "current_floor": 0,
     "final_floor": floors,
     "total_xp": 0,
     "difficulty": difficulty,
-    "picked_sigils": [sigil[0] for sigil in picked_sigils]
+    "picked_sigils": [sigil[0] for sigil in picked_sigils],
+    "current_rooms": selected_rooms
 })
 current_combat.set_metadata("dungeon_state", dump_json(dungeon_state))
 

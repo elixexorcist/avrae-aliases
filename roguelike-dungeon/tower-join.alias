@@ -1,5 +1,4 @@
-init join
-<drac2>
+!alias tower join <drac2>
 # Get the user who ran the command
 user = ctx.author
 
@@ -23,20 +22,17 @@ if not dungeon_metadata:
 
 dungeon_state = load_json(dungeon_metadata)
 
-# Initialize participants list if not present
-if "participants" not in dungeon_state:
-    dungeon_state["participants"] = []
-
 # Check if the user is already a participant
 if any(participant["user_id"] == str(user.id) for participant in dungeon_state["participants"]):
-    return f"{user.display_name} is already a participant in the dungeon."
+    return f'embed -title "Error" -desc "{user.display_name} is already a participant in this dungeon." -color red'
 
 # Update participants
-dungeon_state["participants"].append({"user_id": str(user.id), "character": cc.name})
+dungeon_state["participants"].append({
+    "user_id": str(user.id),
+    "character": cc.name,
+    "level": cc.levels.get("total_level", 1)  # Add character level information
+})
 current_combat.set_metadata("dungeon_state", dump_json(dungeon_state))
-
-# Debug information: Retrieve and display the metadata
-updated_metadata = current_combat.get_metadata("dungeon_state")
 
 # Create the embed message
 embed_title = "Dungeon Run Started!"
