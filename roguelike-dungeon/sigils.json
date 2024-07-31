@@ -96,6 +96,7 @@
             "Name": "🌷 Life's Bloom",
             "Description": "Heals an additional 1d4 HP when receiving healing but suffers disadvantage on all attack rolls.",
             "PassiveEffects": {
+                "damage_bonus": "0[healing]"
             }
         },
         "🌪️ Cyclone's Speed": {

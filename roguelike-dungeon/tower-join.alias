@@ -1,4 +1,6 @@
-!alias tower join <drac2>
+!alias tower-join 
+init join
+<drac2>
 # Get the user who ran the command
 user = ctx.author
 
@@ -9,6 +11,7 @@ settings = load_json(settings)
 # Get the user's active character
 cc = character()
 portrait = cc.image if cc else ""
+level = min(get("level", 1), 20)  # Cap level at 20
 
 # Get the current combat instance
 current_combat = combat()
@@ -22,20 +25,12 @@ if not dungeon_metadata:
 
 dungeon_state = load_json(dungeon_metadata)
 
-# Check if the user is already a participant
-if any(participant["user_id"] == str(user.id) for participant in dungeon_state["participants"]):
-    return f'embed -title "Error" -desc "{user.display_name} is already a participant in this dungeon." -color red'
-
 # Update participants
-dungeon_state["participants"].append({
-    "user_id": str(user.id),
-    "character": cc.name,
-    "level": cc.levels.get("total_level", 1)  # Add character level information
-})
+dungeon_state["participants"].append({"user_id": str(user.id), "character": cc.name, "level": level})
 current_combat.set_metadata("dungeon_state", dump_json(dungeon_state))
 
 # Create the embed message
-embed_title = "Dungeon Run Started!"
+embed_title = "Dungeon Run Joined!"
 embed_desc = f"{user.display_name} (playing {cc.name if cc else 'No character'}) has joined the dungeon."
 embed_color = 0x00ff00
 

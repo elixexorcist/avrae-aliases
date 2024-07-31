@@ -1,4 +1,4 @@
-!alias tower claim <drac2>
+!alias tower-claim <drac2>
 # Parameters
 args = &ARGS&
 if not args:
@@ -122,24 +122,34 @@ if all_claimed:
     # Parse the rooms JSON
     rooms = load_json(rooms_gvar)
 
-    # Select room options using randint
-    room_options = rooms["CombatRooms"] + rooms["PuzzleRooms"] + rooms["MiscRooms"]
-    num_rooms = len(room_options)
+    # Pick three random rooms from either CombatRooms or PuzzleRooms
+    room_options = []
+    room_options += rooms["CombatRooms"]
+    room_options += rooms["PuzzleRooms"]
+    
+    # Roll a d100 for the fourth room
+    if roll("1d100") <= 10:
+        room_options.append(rooms["MiscRooms"][roll(f"1d{len(rooms['MiscRooms'])}") - 1])
+    else:
+        room_options += rooms["CombatRooms"]
+        room_options += rooms["PuzzleRooms"]
+        
     selected_rooms = []
     while len(selected_rooms) < 4:
-        room = room_options[randint(0, num_rooms - 1)]
+        room = room_options[randint(0, len(room_options) - 1)]
         if room not in selected_rooms:
             selected_rooms.append(room)
 
-    # Display the vote options
-    vote_desc = "\n".join([f"Door {i+1}: {room}" for i, room in enumerate(selected_rooms)])
+    # Store the current rooms for voting
+    dungeon_state["current_rooms"] = selected_rooms
 
     # Set the dungeon stage to VOTE
     dungeon_state["dungeon_stage"] = "VOTE"
     dungeon_state["votes"] = {participant["user_id"]: None for participant in dungeon_state["participants"]}
     current_combat.set_metadata("dungeon_state", dump_json(dungeon_state))
 
-    # Create the embed message for voting
+    # Display the vote options
+    vote_desc = "\n".join([f"Door {i+1}: {room}" for i, room in enumerate(selected_rooms)])
     embed_title = "Dungeon Door Vote"
     embed_desc = f"Votes so far:\n{vote_desc}\n\nWaiting for votes from:\nNone\n\nVotes must be unanimous for all players to proceed to the next room."
     embed_color = 0x00ff00

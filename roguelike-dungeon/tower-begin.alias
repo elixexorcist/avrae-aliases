@@ -1,33 +1,51 @@
-!alias tower begin <drac2>
-# Check if combat is active
-combat_instance = combat()
-if not combat_instance:
-    return f'embed -title "Error" -desc "No active combat found. Please start the dungeon first with `!init begin`." -color red'
+!alias tower-begin <drac2>
+# Load the current settings
+settings = get_svar("dungeon_settings")
+settings = load_json(settings)
 
-# Check if the user's active character is in combat
+# Get the user who ran the command
+user = ctx.author
+
+# Get the user's active character
 cc = character()
-if not cc:
-    return f'embed -title "Error" -desc "No active character found. Please select an active character and join the combat with `!init join`." -color red'
+portrait = cc.image if cc else ""
+level = min(get("level", 1), 20)  # Cap level at 20
 
-combatant = combat().get_combatant(cc.name)
-if not combatant:
-    return f'embed -title "Error" -desc "{cc.name} is not in the combat. Please join the combat with `!init join`." -color red'
-
-# Initialize the dungeon state with all combatants as participants
-participants = [{"user_id": str(combatant.controller), "character": combatant.name} for combatant in combat_instance.combatants]
-
-dungeon_state = {
-    "controller": str(ctx.author.id),
-    "participants": participants,
-    "dungeon_stage": "SETUP",
+# Set initial metadata
+dungeon_metadata = {
+    "controller": str(user.id),
+    "participants": [{"user_id": str(user.id), "character": cc.name, "level": level}],
+    "dungeon_stage": 'SETUP',
     "current_floor": 0,
     "final_floor": 0,
     "total_xp": 0,
-    "difficulty": "none"
+    "difficulty": None
 }
 
-# Update the initiative metadata with the new dungeon state
-combat_instance.set_metadata("dungeon_state", dump_json(dungeon_state))
+# Set metadata in combat
+current_combat = combat()
+current_combat.set_metadata("dungeon_state", dump_json(dungeon_metadata))
 
-return f'embed -title "Dungeon Run Initialized!" -desc "{ctx.author.display_name} has initialized the dungeon run. Metadata set with participants." -color 0x00ff00'
+# Create the embed message
+embed_title = "Dungeon Run Started!"
+embed_desc = f"{user.display_name} (playing {cc.name if cc else 'No character'}) has started the dungeon."
+embed_color = 0x00ff00
+
+# Embed fields
+fields = [
+    {"name": "Riddles Included", "value": str(settings["riddles_included"]), "inline": False},
+    {"name": "Number of Floors (Easy)", "value": str(settings["floors_e"]), "inline": False},
+    {"name": "Number of Floors (Medium)", "value": str(settings["floors_m"]), "inline": False},
+    {"name": "Number of Floors (Hard)", "value": str(settings["floors_h"]), "inline": False},
+    {"name": "Number of Floors (Deadly)", "value": str(settings["floors_d"]), "inline": False}
+]
+
+# Construct the embed command
+embed_cmd = f'embed -title "{embed_title}" -desc "{embed_desc}" -color {embed_color}'
+for field in fields:
+    embed_cmd += f' -f "{field["name"]}|{field["value"]}"'
+if portrait:
+    embed_cmd += f' -thumb {portrait}'
+
+return embed_cmd
 </drac2>

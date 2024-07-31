@@ -1,4 +1,4 @@
-!alias tower vote <drac2>
+!alias tower-vote <drac2>
 # Parameters
 args = &ARGS&
 if len(args) != 1 or not args[0].isdigit() or int(args[0]) not in [1, 2, 3, 4]:
@@ -37,43 +37,100 @@ dungeon_state["votes"][user_id] = vote
 all_voted = all(v is not None for v in dungeon_state["votes"].values())
 
 if all_voted:
-    # Calculate XP budget and generate encounter
-    total_levels = sum(p["level"] for p in dungeon_state["participants"])
-    difficulty_multiplier = {"easy": 1, "medium": 2, "hard": 3, "deadly": 4}.get(dungeon_state["difficulty"], 1)
-    xp_budget = total_levels * difficulty_multiplier * 100  # Adjust multiplier as needed
+    # Count votes and determine the winning vote
+    vote_counts = [0, 0, 0, 0]
+    for v in dungeon_state["votes"].values():
+        vote_counts[v - 1] += 1
+    winning_vote = vote_counts.index(max(vote_counts)) + 1
 
-    # Load monsters from GVAR
-    monsters_gvar_id = "your_monsters_gvar_id"  # Replace with actual GVAR ID
-    monsters_gvar = get_gvar(monsters_gvar_id)
-    monsters = load_json(monsters_gvar)
+    # Retrieve the dungeon settings
+    settings = load_json(get_svar("dungeon_settings"))
 
-    # Generate encounter based on XP budget
-    encounter = []
-    total_xp = 0
-    num_monsters = len(dungeon_state["participants"]) + 1
+    # Check the selected room type
+    current_rooms = dungeon_state.get("current_rooms", [])
+    selected_room = current_rooms[winning_vote - 1]
 
-    for cr, monster_list in sorted(monsters.items(), key=lambda x: x[1]["xp"]):
-        for monster in monster_list:
-            if total_xp + monster["xp"] <= xp_budget and len(encounter) < num_monsters:
-                encounter.append(monster)
-                total_xp += monster["xp"]
-            if len(encounter) >= num_monsters:
-                break
-        if len(encounter) >= num_monsters:
-            break
+    # Load the rooms from GVAR
+    rooms_gvar_id = "5bb02988-6ec1-4281-8b9f-38ed8155feec"
+    rooms_gvar = get_gvar(rooms_gvar_id)
+    rooms = load_json(rooms_gvar)
 
-    # Add monsters to initiative
-    for monster in encounter:
-        current_combat.add_combatant(monster["name"], hp=monster["hp"], ac=monster["ac"], init=roll("1d20+" + str(monster["dex_mod"])), img=monster["image"])
+    if selected_room in rooms["CombatRooms"]:
+        # Calculate XP budget and generate encounter
+        total_levels = sum(min(p["level"], 20) for p in dungeon_state["participants"])  # Cap levels at 20
+        difficulty_multiplier = {"easy": 1, "medium": 2, "hard": 3, "deadly": 4}.get(dungeon_state["difficulty"], 1)
+        xp_budget = total_levels * difficulty_multiplier * 100  # Adjust multiplier as needed
 
-    # Proceed to next phase
-    dungeon_state["dungeon_stage"] = "ENCOUNTER"
-    current_combat.set_metadata("dungeon_state", dump_json(dungeon_state))
+        # Load monsters from GVAR
+        monsters_gvar_id = settings["monster_gvar"]
+        monsters_gvar = get_gvar(monsters_gvar_id)
+        monsters = load_json(monsters_gvar)
 
-    # Create encounter display
-    encounter_display = "\n".join([f"{monster['name']} (CR {monster['cr']}, XP {monster['xp']})" for monster in encounter])
-    embed_title = "Encounter Generated"
-    embed_desc = f"An encounter has been generated based on your votes:\n\n{encounter_display}\n\nPrepare for battle!"
+        # XP values for CRs
+        xp_values = {
+            "0": 10, "1/8": 25, "1/4": 50, "1/2": 100,
+            "1": 200, "2": 450, "3": 700, "4": 1100,
+            "5": 1800, "6": 2300, "7": 2900, "8": 3900,
+            "9": 5000, "10": 5900, "11": 7200, "12": 8400,
+            "13": 10000, "14": 11500, "15": 13000, "16": 15000,
+            "17": 18000, "18": 20000, "19": 22000, "20": 25000,
+            "21": 33000, "22": 41000, "23": 50000, "24": 62000,
+            "25": 75000, "26": 90000, "27": 105000, "28": 120000,
+            "29": 135000, "30": 155000
+        }
+
+        # Flatten monster list and assign XP based on CR
+        monster_list = []
+        for cr, monster_group in monsters.items():
+            try:
+                for monster in monster_group:
+                    monster["xp"] = xp_values.get(cr, 0)
+                    monster_list.append(monster)
+            except:
+                pass
+
+        # Ensure monster_list is not empty
+        if not monster_list:
+            return f'embed -title "Error: No Monsters" -desc "No valid monsters found in the GVAR. Please check the monster data."'
+
+        # Generate encounter based on XP budget
+        encounter = []
+        total_xp = 0
+        num_monsters = len(dungeon_state["participants"]) + 1
+
+        while total_xp < xp_budget and len(encounter) < num_monsters and monster_list:
+            monster_index = roll(f"1d{len(monster_list)}") - 1
+            if 0 <= monster_index < len(monster_list):
+                monster = monster_list[monster_index]
+                if total_xp + int(monster["xp"]) <= xp_budget:
+                    encounter.append(monster)
+                    total_xp += int(monster["xp"])
+                    del monster_list[monster_index]
+
+        # Add monsters to initiative
+        for monster in encounter:
+            current_combat.add_combatant(monster["name"], hp=monster["hp"], ac=monster["ac"], init=roll(f"1d20+{monster['dex_mod']}"), img=monster["image"])
+
+        # Proceed to next phase
+        dungeon_state["dungeon_stage"] = "ENCOUNTER"
+        current_combat.set_metadata("dungeon_state", dump_json(dungeon_state))
+
+        # Create encounter display
+        encounter_display = "\n".join([f"{monster['name']} (CR {monster['cr']}, XP {monster['xp']})" for monster in encounter])
+        embed_title = "Encounter Generated"
+        embed_desc = f"An encounter has been generated based on your votes:\n\n{encounter_display}\n\nPrepare for battle!"
+    else:
+        # Proceed to the next phase without generating an encounter
+        dungeon_state["dungeon_stage"] = "NEXT_PHASE"
+        current_combat.set_metadata("dungeon_state", dump_json(dungeon_state))
+        embed_title = "Room Selected"
+        embed_desc = f"The room selected is: {selected_room}. Proceeding to the next phase."
+
+    embed_color = 0x00ff00
+
+    # Construct the embed command
+    embed_cmd = f'embed -title "{embed_title}" -desc "{embed_desc}" -color {embed_color}'
+    return embed_cmd
 else:
     # Create vote display
     votes = {i: [] for i in range(1, 5)}

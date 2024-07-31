@@ -1,5 +1,5 @@
 {
-    "CombatRooms":["⚔️Brawl","☠️Boss Battle","⚖️Heaven or Hell","❓Mystery Room","🔮Glittering Essence"],
-    "PuzzleRooms":["📜Riddle","⚖️Heaven or Hell","❓Mystery Room","🔮Glittering Essence"],
-    "MiscRooms":["🍷Alchemical Station","❓Mystery Room","🛍️Essence Emporeum"]
+    "CombatRooms":["⚔️Brawl","☠️Boss Battle"],
+    "PuzzleRooms":["📜Riddle"],
+    "MiscRooms":["🍷Alchemical Station","❓Mystery Room","🛍️Essence Emporeum","⚖️Heaven or Hell","❓Mystery Room","🔮Glittering Essence"]
 }
