@@ -1,0 +1,65 @@
+!alias buy embed
+<drac2>
+args = &ARGS&
+if len(args) < 1:
+    return 'embed -title "Purchase Error" -desc "Please specify an item to buy."'
+
+item_query = args[0].lower()
+quantity = int(args[1]) if len(args) > 1 else 1  # Default quantity is 1 if not specified
+
+# Load item prices from the JSON file
+gvar_id = '6d301f86-7062-45b3-b51c-53fa6ccca241'  # The GVAR ID for your item_prices.json
+item_prices = load_json(get_gvar(gvar_id))
+
+# Simplified fuzzy matching function
+def simple_fuzzy_match(query, options):
+    for option in options:
+        if query in option:
+            return option
+    return None
+
+# Convert keys to lowercase for case-insensitive lookup
+item_prices_lower = {k.lower(): k for k in item_prices.keys()}
+
+# Use simplified fuzzy matching to find the closest item name
+matched_item_lower = simple_fuzzy_match(item_query, item_prices_lower.keys())
+if not matched_item_lower:
+    return f'embed -title "Purchase Error" -desc "Item \\"{args[0]}\\" not found. Please check the spelling and try again."'
+
+# Get the properly cased item name and its price
+matched_item = item_prices_lower[matched_item_lower]
+price = item_prices[matched_item]
+
+total_cost = price * quantity
+
+# Persuasion check
+persuasion_check = vroll(character().skills.persuasion.d20())
+roll_result = persuasion_check.total
+
+# Apply discount if roll result is greater than 10
+discount = roll_result if roll_result > 10 else 0
+discounted_cost = total_cost * (1 - discount / 100)
+discounted_cost_cp = int(discounted_cost * 100)  # Convert discounted cost to copper pieces
+
+# Subtract gold from the character's coinpurse
+character().coinpurse.modify_coins(cp=-discounted_cost_cp)
+
+# Constructing the embed
+title = f"{character().name} Makes a Purchase!"
+description = (
+    f'{character().name} {"was unable to negotiate a discount." if discount == 0 else "negotiated a discount successfully!"}\n\n'
+    f'**Persuasion Check:** {persuasion_check}\n\n'
+    f'**Item Purchased:** {quantity}x {matched_item}\n'
+    f'**Total Cost:** {discounted_cost:.2f} gp {"(with discount)" if discount > 0 else ""}\n'
+    f'**Bag:** Shopping Bag\n\n'
+    f'The item(s) have been added to your bag and the cost has been deducted from your coinpurse.'
+)
+
+# Adding items to the bag (assuming baglib is used)
+using(baglib="4119d62e-6a98-4153-bea9-0a99bb36da2c")
+myBags = baglib.load_bags()
+baglib.modify_item(myBags, item=matched_item, quantity=quantity, bag_name="Shopping Bag", create_on_fail=True)
+baglib.save_bags(myBags)
+
+return f'embed -title "{title}" -desc "{description}" -thumb {character().image}'
+</drac2>
