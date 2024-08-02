@@ -1,32 +1,22 @@
-!alias Encount <drac2>
-# Attempt: !hunt biome difficulty -levels <levels>
+!alias enco
+<drac2>
+# Attempt: !hunt biome difficulty levels
 # Parameters
-args1 = &ARGS&
-args2 = &ARGS&
+args_one = str(&ARGS&)
+args_two = str(&ARGS&)
+args_three = str(&ARGS&)
+
 
 # Check if the args have values... so like len returns the number of icons in a string. so if they are empty its 0. cant be less than 0 in this case
-if len(args1) != 0 or len(args2) != 0:
-    return f'embed -title "Oh something seem to have gone wrong! remember to use `!hunt <biome> <difficulty>`. please make sure the biome is written right"'
+if len(args_one) == 0 or len(args_two) == 0 or len(args_three == 0:
+    return f'embed -title "Oh something seem to have gone wrong! remember to use `!hunt <biome> <difficulty> <levels>`. please make sure everything is written up"'
+biome = "" # Empty variable, assign the 
+lowerArg = args_one.lower() #make lowercase
 
-Biome = "" # Empty variable, assign the 
-lowerArg = arg1.lower() # make lowercase
+#loads JSON in as a variable
+biomedata = load_json(hunt-monsters.gvar)
 
-match lowerArg: # Beep this is a switch statement but with match and case instead
-    case "forest":
-        Biome = "forest_monsters"
-    case "grassland":
-        Biome = "grassland_monsters"
-    case "hill" or "hills":
-        Biome = "hill_monsters"
-    case "lake":
-        Biome = "lake_monsters"
-    case "river" or "rivers":
-        Biome = "river_monsters"
-    case "cave" or "caves":
-        Biome = "cave_monsters"
-    case "mountain" or "mountains":
-        Biome = "mountain_monsters"
-    case "swamp":
-        Biome = "swamp_monsters"
+return f'embed -title "You entered the {lowerArg}"'
+#BiomeVar.get{Biome} != "VOTE":
 
 </drac2>
