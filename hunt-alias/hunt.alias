@@ -8,13 +8,13 @@ args_three = str(&ARGS&)
 
 
 # Check if the args have values... so like len returns the number of icons in a string. so if they are empty its 0. cant be less than 0 in this case
-if len(args_one) == 0 or len(args_two) == 0 or len(args_three == 0:
+if len(args_one) == 0 or len(args_two) == 0 or len(args_three) == 0:
     return f'embed -title "Oh something seem to have gone wrong! remember to use `!hunt <biome> <difficulty> <levels>`. please make sure everything is written up"'
 biome = "" # Empty variable, assign the 
 lowerArg = args_one.lower() #make lowercase
 
 #loads JSON in as a variable
-biomedata = load_json(hunt-monsters.gvar)
+biomedata = load_json(get_gvar("761b86c3-5dcb-4f55-a264-efc47aa201d4"))
 
 return f'embed -title "You entered the {lowerArg}"'
 #BiomeVar.get{Biome} != "VOTE":
