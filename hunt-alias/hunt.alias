@@ -3,15 +3,20 @@
 # Attempt: !hunt biome difficulty levels
 # Parameters
 all_args = &ARGS&
+json_file = "761b86c3-5dcb-4f55-a264-efc47aa201d4"
+
+#loads JSON in as a variable
+biomedata = load_json(get_gvar(json_file))
+xp_rate = biomedata["experience"]
 
 if  len(all_args) < 2:
-    return f'embed -title "Oh something seem to have gone wrong!" -desc "remember to use `!hunt <biome> <difficulty>`. please make sure everything is written up. if you are more than just your character, please use `-levels` followed by all party members levels, seperated only by a comma"'
+    return f'embed -title "Oh something seem to have gone wrong!" -desc "remember to use `!hunt <biome> <difficulty> <level(s)>`.\n please make sure everything is written up. if you are more than just your character,for the thrid argument write all characters level up, seperated only by a comma" -footer "Alias made by: BeepBoop1605"'
 
-args_biome = str(all_args[0])
-arg_difficulty = str(all_args[1]).lower()
-arg_levels = character().levels
+args_biome = str(all_args[0]).lower() #make lowercase
+arg_difficulty = str(all_args[1]).lower() #
+arg_levels = character().levels.total_level # default one player numbers. altered if more players
 char_amount = 1
-if  len(all_args) > 2:
+if  len(all_args) > 2: # checks if the <levels> arg is filled. if so, then you are more than once player
     arg_levels = 0
     char_amount = 0
     levels = str(all_args[2])
@@ -20,29 +25,49 @@ if  len(all_args) > 2:
         char_amount = char_amount+1
         arg_levels = arg_levels+int(i)
 
-cr = ceil(arg_levels/char_amount)
+cr = ceil(arg_levels/char_amount) # add all char levels together, divide by player amount and round up
+crxp = xp_rate[str(cr)] # the xp that the average level/cr is
 if arg_difficulty == "easy":
-    cr = cr+3
-elif arg_difficulty == "medium"@
-    cr = cr+5
+    crxp = crxp
+elif arg_difficulty == "medium":
+    crxp = crxp*2
 elif arg_difficulty == "hard":
-    cr = cr+8
+    crxp = crxp*3
 elif arg_difficulty == "deadly":
-    cr = cr+10
+    crxp = crxp*4.5
 else:
-    return f'embed -title "Oh something seem to have gone wrong!" -desc "It seems that the difficulty may have been mispelled, you can use the following: `easy`, `medium`, `hard` or `deadly`"'
+    return f'embed -title "Oh something seem to have gone wrong!" -desc "It seems that the difficulty may have been mispelled, you can use the following: `easy`, `medium`, `hard` or `deadly`" -footer "Alias made by: BeepBoop1605"'
 
-#loads JSON in as a variable
-biomedata = load_json(get_gvar("761b86c3-5dcb-4f55-a264-efc47aa201d4"))
-lowerArg = args_biome.lower() #make lowercase
+if not biomedata[args_biome]:
+    return f'embed -title "Oh something seem to have gone wrong!" -desc "it seems that we cant find the biome. please select one of the following list: ```forest```" -footer "Alias made by: BeepBoop1605"'
 
-monster_opt = biomedata[lowerArg]["monsters"]
+biome_desc = biomedata[args_biome]
+monster_opt = biome_desc["monster_grouping"] # the monsters in the choosen biome
 # Check if the args have values... so like len returns the number of icons in a string. so if they are empty its 0. cant be less than 0 in this case
 if len(args_biome) == 0 or len(arg_difficulty) == 0:
-    return f'embed -title "Oh something seem to have gone wrong!" -desc "remember to use `!hunt <biome> <difficulty>`. please make sure everything is written up. if you are more than just your character, please use `-levels` followed by all party members levels, seperated only by a comma"'
+    return f'embed -title "Oh something seem to have gone wrong!" -desc "remember to use `!hunt <biome> <difficulty> <level(s)>`. please make sure everything is written up. if you are more than just your character,for the thrid argument write all characters level up, seperated only by a comma -footer "Alias made by: BeepBoop1605""'
+
+random_index = randchoice(list(monster_opt))
+random_grouping = monster_opt[random_index]
+main_monst = randchoice(list(random_grouping))
+main_monst_cr = random_grouping[main_monst]
+main_monst_xp = xp_rate[str(random_grouping[main_monst])]
+total_xp = main_monst_xp
+all_monsters = [[main_monst, main_monst_xp. 1] ]
+
+if total_xp > crxp+100:
+    while total_xp < crxp+100:
+    main_monst = randchoice(list(random_grouping))
+    main_monst_cr = random_grouping[main_monst]
+    main_monst_xp = xp_rate[str(random_grouping[main_monst])]
+    total_xp = main_monst_xp
+    all_monsters = [[main_monst, main_monst_xp. 1] ]
+
+if total_xp < crxp:
+    while total_xp < crxp:
 
 
-return f'embed -title "You seek an encounter in {biomedata[lowerArg]["title"]} {biomedata[lowerArg]["icon"]} and find:"'
-# biomedata[lowerArg]
+
+return f'embed -title "{biome_desc["icon"]} {character().name} is seeking an encounter in The {biome_desc["title"]} and find:" -desc "{main_monst_xp}" -thumb "{biome_desc["thumbnail"]}" -color "{biome_desc["thumbnail"]}" -footer "Alias made by: BeepBoop1605, Art made by: {biome_desc["art_credit"]}"'
 
 </drac2>

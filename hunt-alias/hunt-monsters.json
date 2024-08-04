@@ -39,15 +39,35 @@
         "id": 1,
         "icon": ":evergreen_tree:",
         "title": "Forest",
-        "monsters":{
-            "brown bear":{
-                "cr": 1,
-                "allies":{
-                    "brown bear": 1,
-                    "bearfolk": 3,
-                    "werebear": 5,
-                    "goliath werebear": 8
-                }
+        "color": "dark green",
+        "thumbnail": "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/06637172-f93c-4982-baac-3121c812e6d2/dhl2w39-c064eec5-5e55-437d-b922-2dc702d716e4.jpg/v1/fill/w_1920,h_1080,q_75,strp/nature_forest_fantasy_wallpaper3k00371_by_gghiru_dhl2w39-fullview.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTA4MCIsInBhdGgiOiJcL2ZcLzA2NjM3MTcyLWY5M2MtNDk4Mi1iYWFjLTMxMjFjODEyZTZkMlwvZGhsMnczOS1jMDY0ZWVjNS01ZTU1LTQzN2QtYjkyMi0yZGM3MDJkNzE2ZTQuanBnIiwid2lkdGgiOiI8PTE5MjAifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.J2A4UBV_T_Y4NRLnfI4vuRkfZhJJH1au91ezXO5deGs",
+        "art_credit": "gghiru",
+        "monster_grouping":{
+            "bear_types":{
+                "black Bear": "1/2",
+                "brown bear": 1,
+                "Awakened Brown Bear": 1,
+                "cave bear": 2,
+                "bearfolk": 3,
+                "werebear": 5,
+                "goliath werebear": 8,
+                "Blazebear": 12
+            },
+            "plants_and_nature":{
+                "awakened shrub": 0,
+                "twig blight": "1/8",
+                "needle blight": "1/8",
+                "vegepygmy": "1/4",
+                "vine blight": "1/2",
+                "thorny vegepygmy":1,
+                "awakened tree": 2,
+                "druid": 2,
+                "vegepygmy chief": 2,
+                "shambling mound": 5,
+                "wood woad":5,
+                "cropse flower": 8,
+                "treant": 9,
+                "archdruid": 12
             }
         }
     }
