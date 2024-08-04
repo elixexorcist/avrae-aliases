@@ -2,21 +2,47 @@
 <drac2>
 # Attempt: !hunt biome difficulty levels
 # Parameters
-args_one = str(&ARGS&)
-args_two = str(&ARGS&)
-args_three = str(&ARGS&)
+all_args = &ARGS&
 
+if  len(all_args) < 2:
+    return f'embed -title "Oh something seem to have gone wrong!" -desc "remember to use `!hunt <biome> <difficulty>`. please make sure everything is written up. if you are more than just your character, please use `-levels` followed by all party members levels, seperated only by a comma"'
 
-# Check if the args have values... so like len returns the number of icons in a string. so if they are empty its 0. cant be less than 0 in this case
-if len(args_one) == 0 or len(args_two) == 0 or len(args_three) == 0:
-    return f'embed -title "Oh something seem to have gone wrong! remember to use `!hunt <biome> <difficulty> <levels>`. please make sure everything is written up"'
-biome = "" # Empty variable, assign the 
-lowerArg = args_one.lower() #make lowercase
+args_biome = str(all_args[0])
+arg_difficulty = str(all_args[1]).lower()
+arg_levels = character().levels
+char_amount = 1
+if  len(all_args) > 2:
+    arg_levels = 0
+    char_amount = 0
+    levels = str(all_args[2])
+    levels = levels.split(",")
+    for i in levels:
+        char_amount = char_amount+1
+        arg_levels = arg_levels+int(i)
+
+cr = ceil(arg_levels/char_amount)
+if arg_difficulty == "easy":
+    cr = cr+3
+elif arg_difficulty == "medium"@
+    cr = cr+5
+elif arg_difficulty == "hard":
+    cr = cr+8
+elif arg_difficulty == "deadly":
+    cr = cr+10
+else:
+    return f'embed -title "Oh something seem to have gone wrong!" -desc "It seems that the difficulty may have been mispelled, you can use the following: `easy`, `medium`, `hard` or `deadly`"'
 
 #loads JSON in as a variable
 biomedata = load_json(get_gvar("761b86c3-5dcb-4f55-a264-efc47aa201d4"))
+lowerArg = args_biome.lower() #make lowercase
 
-return f'embed -title "You entered the {lowerArg}"'
-#BiomeVar.get{Biome} != "VOTE":
+monster_opt = biomedata[lowerArg]["monsters"]
+# Check if the args have values... so like len returns the number of icons in a string. so if they are empty its 0. cant be less than 0 in this case
+if len(args_biome) == 0 or len(arg_difficulty) == 0:
+    return f'embed -title "Oh something seem to have gone wrong!" -desc "remember to use `!hunt <biome> <difficulty>`. please make sure everything is written up. if you are more than just your character, please use `-levels` followed by all party members levels, seperated only by a comma"'
+
+
+return f'embed -title "You seek an encounter in {biomedata[lowerArg]["title"]} {biomedata[lowerArg]["icon"]} and find:"'
+# biomedata[lowerArg]
 
 </drac2>
