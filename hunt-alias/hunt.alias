@@ -53,21 +53,36 @@ main_monst = randchoice(list(random_grouping))
 main_monst_cr = random_grouping[main_monst]
 main_monst_xp = xp_rate[str(random_grouping[main_monst])]
 total_xp = main_monst_xp
-all_monsters = [[main_monst, main_monst_xp. 1] ]
+all_monsters = {main_monst:[main_monst_cr, main_monst_xp, 1]}
 
-if total_xp > crxp+100:
+if total_xp > crxp+(crxp*0.25):
     while total_xp < crxp+100:
-    main_monst = randchoice(list(random_grouping))
-    main_monst_cr = random_grouping[main_monst]
-    main_monst_xp = xp_rate[str(random_grouping[main_monst])]
-    total_xp = main_monst_xp
-    all_monsters = [[main_monst, main_monst_xp. 1] ]
+        main_monst = randchoice(list(random_grouping))
+        main_monst_cr = random_grouping[main_monst]
+        main_monst_xp = xp_rate[str(main_monst_xp)]
+        total_xp = main_monst_xp
+        all_monsters = {main_monst:[main_monst_cr, main_monst_xp, 1]}
+
+same_monst = False
 
 if total_xp < crxp:
+    max_aimed_crxp = crxp+(crxp*0.25)
     while total_xp < crxp:
+        new_monst = randchoice(list(random_grouping))
+        new_monst_cr = random_grouping[new_monst]
+        monst_num = new_monst_cr
+        new_monst_xp = xp_rate[str(monst_num)]
+        for i in all_monsters:
+            if i[1] == new_monst:
+                num = i[new_monst][2]
+                i[new_monst][2] = int(num)+1
+        if same_monst == False and total_xp + new_monst_xp <= max_aimed_crxp:
+            new_monster_item = {new_monst:[new_monst_cr, new_monst_xp, 1]}
+            all_monsters.update(new_monster_item)
 
 
 
-return f'embed -title "{biome_desc["icon"]} {character().name} is seeking an encounter in The {biome_desc["title"]} and find:" -desc "{main_monst_xp}" -thumb "{biome_desc["thumbnail"]}" -color "{biome_desc["thumbnail"]}" -footer "Alias made by: BeepBoop1605, Art made by: {biome_desc["art_credit"]}"'
+
+return f'embed -title "{biome_desc["icon"]} {character().name} is seeking an encounter in The {biome_desc["title"]} and find:" -desc "{all_monsters}" -thumb "{biome_desc["thumbnail"]}" -color "{biome_desc["thumbnail"]}" -footer "Alias made by: BeepBoop1605, Art made by: {biome_desc["art_credit"]}"'
 
 </drac2>
