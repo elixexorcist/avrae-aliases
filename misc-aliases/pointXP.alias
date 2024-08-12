@@ -68,4 +68,4 @@ footer_text = "Command syntax: !pointxp <total XP> <number and tier (c, s, e, g,
 -thumb "{{thumbnail_url}}"
 -footer "{{footer_text}}"
 -f "XP Earned|{{F}}"
--f "DM XP Reward: {{dm_xp/2}}"
+-f "DM XP Reward: {{floor(dm_xp/2)}}"
