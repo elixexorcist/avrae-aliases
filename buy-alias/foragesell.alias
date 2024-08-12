@@ -1,0 +1,116 @@
+!alias foragesell embed
+<drac2>
+args = &ARGS&
+confirmation_var = "forageSellConfirmation"
+confirmation_items_var = "forageSellItems"
+confirmation_prices_var = "forageSellPrices"
+
+character_name = character().name
+character_avatar = character().image
+
+# Item categories and their respective dice rolls
+item_categories = {
+    "basic_resources": ('2', 'sp'),
+    "wild_common": ('2', 'sp'),
+    "wild_resources": ('4', 'sp'),
+    "wild_rare": ('6', 'sp'),
+    "wild_vr": ('2', 'gp'),
+    "wild_l": ('10', 'gp'),
+    "wild_lg": ('5', 'gp'),
+    "wild_hg": ('10', 'gp'),
+    "hunt_animals": (1, 'sp')
+}
+
+# Define the items in each category
+items_in_categories = {
+    "basic_resources": ['Feathers', 'Hide', 'Bones', 'Scales', 'Pelts'],
+    "wild_common": ['Mushrooms', 'Berries', 'Nuts', 'Wild Fruit', 'Wild Grain', 'Mixed Seeds', 'Wild Veggies', 'Roots & Tubers', 'Wildflowers', 'Plant Fibres', 'Sand', 'Firewood', 'Gravel', 'Vines'],
+    "wild_resources": ['Culinary Herbs', 'Tree Sap', 'Masonry Stone', 'Clay', 'Coal', 'Tin Ore', 'Copper Ore'],
+    "wild_rare": ['Medical Herbs', 'Oil', 'Mixed Minerals', 'Iron Ore', 'Gold Dust', 'Fish and Frog Roe', 'Bronze Scrap', 'Fossil'],
+    "wild_vr": ['Gold Ore', 'Silver Ore'],
+    "wild_l": ['Mythril Ore', 'Adamantine Ore', 'Platinum Ore'],
+    "wild_lg": ['Amber', 'Calcite', 'Fluorite', 'Amphibole', 'Feldspar', 'Quartz'],
+    "wild_hg": ['Ruby', 'Sapphire', 'Emerald', 'Diamond', 'Topaz'],
+    "hunt_animals": ['Crab', 'Bear', 'Bass', 'Carp', 'Sturgeon', 'Catfish', 'Snapper', 'Cod', 'Yellowtail', 'Barracuda', 'Squirrel', 'Rabbit', 'Turkey', 'Waterfowl', 'Pheasant', 'Deer', 'Elk', 'Boar', 'Antelope', 'Mountain Lion', 'Salmon', 'Unknown Moss', 'Fresh Water']
+}
+
+def preview_items(bag):
+    if not bag:
+        return []
+    items_to_sell = []
+    item_prices = []
+    for item, qty in bag[1].items():
+        price_cp = get_category_item_price(item, qty)
+        if not price_cp:
+            price_cp = get_fish_price(item, qty)
+        if price_cp:
+            items_to_sell.append(item)
+            item_prices.append(price_cp)
+    return items_to_sell, item_prices
+
+# Check if confirmation is needed
+if not args:
+    using(baglib="4119d62e-6a98-4153-bea9-0a99bb36da2c")
+    bags = baglib.load_bags()
+    forage_bag = baglib.get_bag(bags, "Forage", create_on_fail=False)
+    meat_bag = baglib.get_bag(bags, "Meat", create_on_fail=False)
+
+    items_to_sell_forage, item_prices_forage = preview_items(forage_bag)
+    items_to_sell_meat, item_prices_meat = preview_items(meat_bag)
+
+    items_to_sell = items_to_sell_forage + items_to_sell_meat
+    item_prices = item_prices_forage + item_prices_meat
+
+    character().set_cvar(confirmation_items_var, dump_json(items_to_sell))
+    character().set_cvar(confirmation_prices_var, dump_json(item_prices))
+
+    summary = ""
+    for i in range(len(items_to_sell)):
+        summary += f"{items_to_sell[i]}: {item_prices[i] / 100:.2f} gp\n"
+
+    return f'embed -title "{character_name} is ready to sell items!" -desc "The following items will be sold:\n{summary}\n\nConfirm by typing `!foragesell yes` or cancel by typing `!foragesell no`." -thumb {character_avatar} -footer "Sell your items and make some gold!" -color #FF9900 -fields name=👜 Items,value="{summary}",inline=false'
+
+# Check for user response
+confirmation = args[0].lower()
+if confirmation not in ["yes", "no"]:
+    return f'embed -title "Invalid Input" -desc "Please confirm by typing `!foragesell yes` or cancel by typing `!foragesell no`." -color #FF0000'
+
+if confirmation == "no":
+    character().delete_cvar(confirmation_var)
+    character().delete_cvar(confirmation_items_var)
+    character().delete_cvar(confirmation_prices_var)
+    return f'embed -title "Action Cancelled" -desc "The selling of items has been cancelled." -color #00FF00'
+
+if confirmation == "yes":
+    items_to_sell = load_json(character().get_cvar(confirmation_items_var, '[]'))
+    item_prices = load_json(character().get_cvar(confirmation_prices_var, '[]'))
+
+    using(baglib="4119d62e-6a98-4153-bea9-0a99bb36da2c")
+    bags = baglib.load_bags()
+    forage_bag = baglib.get_bag(bags, "Forage", create_on_fail=False)
+    meat_bag = baglib.get_bag(bags, "Meat", create_on_fail=False)
+
+    def sell_items(bag):
+        total_earnings_cp = 0
+        if not bag:
+            return total_earnings_cp
+        for item, qty in list(bag[1].items()):
+            if item in items_to_sell:
+                price_cp = item_prices[items_to_sell.index(item)]
+                total_earnings_cp += price_cp
+                bag[1][item] = 0
+        return total_earnings_cp
+
+    total_earnings_cp = sell_items(forage_bag)
+    total_earnings_cp += sell_items(meat_bag)
+
+    character().coinpurse.modify_coins(cp=total_earnings_cp)
+    baglib.save_bags(bags)
+
+    character().delete_cvar(confirmation_var)
+    character().delete_cvar(confirmation_items_var)
+    character().delete_cvar(confirmation_prices_var)
+    return f'embed -title "Items Sold!" -desc "{character_name} has sold all items in the Forage, and Meat bags for a total of {total_earnings_cp / 100:.2f} gold pieces." -thumb {character_avatar} -footer "Congratulations on your earnings!" -color #00FF00'
+
+return f'embed -title "Error" -desc "An unexpected error occurred." -color #FF0000'
+</drac2>
