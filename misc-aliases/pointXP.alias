@@ -1,0 +1,71 @@
+embed
+<drac2>
+args = &ARGS&
+
+# Ensure that there are at least 2 arguments
+if len(args) < 2:
+    return "Error: Expected at least 2 arguments (total XP and at least one tier), but got " + str(len(args))
+
+total_xp = int(args[0])
+tiers = ['c', 's', 'e', 'g', 'p', 'gem']
+tier_names = ['Copper', 'Silver', 'Electrum', 'Gold', 'Platinum', 'Gemstone']
+tier_counts = [0]*6
+total = 0
+sync_mode = 'sync' in args
+
+# Process the tier arguments
+for arg in args[1:]:
+    if arg == 'sync':
+        continue
+
+    # Ensure the argument is in the correct format
+    if not any(arg.endswith(tier) for tier in tiers):
+        return "Error: Invalid tier argument format. Expected a number followed by a tier ('c', 's', 'e', 'g', 'p', 'gem'), but got " + arg
+
+    # Update the count for the appropriate tier
+    for i, tier in enumerate(tiers):
+        if arg.endswith(tier):
+            tier_counts[i] = int(arg[:-(len(tier))])
+            total += int(arg[:-(len(tier))])
+            break
+
+# Calculate the number of points
+points = sum(tier_counts) if sync_mode else sum(count * (i+1) for i, count in enumerate(tier_counts))
+
+# Make sure there are at least some points
+if points == 0:
+    return "Error: There must be at least one character in one of the tiers."
+
+# Calculate the base XP
+base_xp = total_xp / points
+
+# Prepare the output
+T = "XP Distribution (Sync Mode)" if sync_mode else "XP Distribution"
+D = "The amount of XP split: " + str(total_xp)
+F = ""
+min_xp = float('inf')
+
+for i in range(6):
+    if tier_counts[i] > 0:
+        xp = base_xp * (i+1) if not sync_mode else base_xp
+        if 'miss' not in args:
+            xp *= [1, 0.9, 0.85, 0.8, 0.75, 0.7][i]
+        F += f"{tier_names[i]}: {round(xp)} XP, "
+        min_xp = min(min_xp, xp)
+
+F = F[:-2]  # Remove the last comma and space
+
+# Calculate the DM XP, ensuring it's a minimum of 2000
+dm_xp = max(min_xp, 500)
+dm_xp = int(dm_xp)
+
+thumbnail_url = "https://media.discordapp.net/attachments/951607482353082449/1118011550045847582/mystiic_mage_the_manifestation_of_xp_points_in_a_video_game4_6bf51e6f-9787-43c3-845b-41e1611eab6d.png?width=671&height=671"
+footer_text = "Command syntax: !pointxp <total XP> <number and tier (c, s, e, g, p, gem)>. For example: !pointxp 1000 2c 3s 1e 1g 2p 1gem | Written by mystiic_mage |"
+</drac2>
+-title "{{T}}"
+-desc "{{D}}"
+-color #800080
+-thumb "{{thumbnail_url}}"
+-footer "{{footer_text}}"
+-f "XP Earned|{{F}}"
+-f "DM XP Reward: {{dm_xp/2}}"
